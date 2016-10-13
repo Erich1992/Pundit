@@ -1,0 +1,73 @@
+<html>
+<head>
+  <meta name="google-signin-client_id" content="919337801636-2kt0dplaf9ap25m4b3eqc35a95tvn1v0.apps.googleusercontent.com">
+</head>
+<body>
+  <!--fb login-->
+  <div id="fb-root"></div>
+  <script>(function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=491260624369943";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));</script>
+  <br>
+  <fb:login-button scope="public_profile,email,user_friends" size="xlarge" onlogin="checkLoginState();"> </fb:login-button>
+  <br><br>
+  <div id="my-signin2"></div>
+  <script>
+    function statusChangeCallback(response) {
+      console.log('statusChangeCallback');
+      console.log(response);
+      if (response.status === 'connected') {
+        console.log('accessToken: ', response.authResponse.accessToken);
+      } else if (response.status === 'not_authorized') {
+        document.getElementById('status').innerHTML = 'Please log ' +
+          'into this app.';
+      } else {
+        document.getElementById('status').innerHTML = 'Please log ' +
+          'into Facebook.';
+      }
+    }
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    }
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : 491260624369943, 
+        cookie     : true,  // enable cookies to allow the server to access 
+                            // the session
+        xfbml      : true,  // parse social plugins on this page
+        version    : 'v2.5' // use version 2.5
+      });
+    };
+  </script>
+
+  <!--goog login-->
+  <script>
+    function onSuccess(googleUser) {
+      console.log(googleUser);
+      console.log('Logged in as: ' + googleUser.getBasicProfile().getName());
+    }
+    function onFailure(error) {
+      console.log(error);
+    }
+    function renderButton() {
+      gapi.signin2.render('my-signin2', {
+        'scope': 'https://www.googleapis.com/auth/plus.login',
+        'width': 200,
+        'height': 50,
+        'longtitle': true,
+        'theme': 'dark',
+        'onsuccess': onSuccess,
+        'onfailure': onFailure
+      });
+    }
+  </script>
+  <script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+
+</body>
+</html>

@@ -1,0 +1,230 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html ng-app="angularjsboilerplate">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.1/angular-route.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <script src="{% static 'djangorestangularjsboilerplate/app/app.module.js' %}"></script>
+    <script src="{% static 'djangorestangularjsboilerplate/assets/js/ui-bootstrap-tpls-0.14.2.min.js' %}"></script>
+    <link href="{% static 'djangorestangularjsboilerplate/assets/css/carousel.css' %}" rel="stylesheet">
+    <link href="{% static 'djangorestangularjsboilerplate/assets/css/styles.css' %}" rel="stylesheet">
+    <meta name="google-signin-client_id" content="401018725235-udihlpgrtc4d1dkcdfkco63m07kn1vje.apps.googleusercontent.com">
+    <base href="/"/>
+  </head>
+  <body ng-controller="appController as vm">
+    <!--fb login-->
+    <div id="fb-root"></div>
+    <div
+      class="fb-like"
+      data-share="true"
+      data-width="450"
+      data-show-faces="true">
+    </div>
+    <script>
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=254297761582098";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+
+      function statusChangeCallback(response) {
+        if (response.status === 'connected') {
+          console.log('fbat: ', response.authResponse.accessToken)
+          $('#fbat').val(response.authResponse.accessToken);
+          angular.element($('#fbat')).triggerHandler('input');
+          $('#fbloginFormSubmit').click();
+        } else if (response.status === 'not_authorized') {
+          document.getElementById('status').innerHTML = 'Please log ' +
+            'into this app.';
+        } else {
+          document.getElementById('status').innerHTML = 'Please log ' +
+            'into Facebook.';
+        }
+      }
+      function checkLoginState() {
+        FB.getLoginStatus(function(response) {
+          statusChangeCallback(response);
+        });
+      }
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : {{ FB_APP_ID }},
+          cookie     : true,  // enable cookies to allow the server to access
+                              // the session
+          xfbml      : true,  // parse social plugins on this page
+          version    : 'v2.5' // use version 2.5
+        });
+      };
+      // goog login
+      function onSuccess(googleUser) {
+        auth_response = googleUser.getAuthResponse();
+        console.log('googat:', auth_response.access_token);
+        $('#googat').val(auth_response.access_token);
+        angular.element($('#googat')).triggerHandler('input');
+        $('#googloginFormSubmit').click();
+        console.log('finished clicking googloginFormSubmit');
+      }
+      function onFailure(error) {
+        console.log(error);
+      }
+      function onLoad() {
+        console.log('in onLoad');
+        gapi.load('auth2', function() {
+          gapi.auth2.init();
+          for (var i = 0; i < 3; i++) {
+            renderButton("gsignin"+i);
+          };
+        });
+      }
+      function renderButton(buttonName) {
+        gapi.signin2.render(buttonName, {
+          'scope': 'https://www.googleapis.com/auth/plus.login',
+          'width': 250,
+          'height': 50,
+          'longtitle': true,
+          'theme': 'dark',
+          'onsuccess': onSuccess,
+          'onfailure': onFailure
+        });
+      }
+    </script>
+    <script src="https://apis.google.com/js/platform.js?onload=onLoad" async defer></script>
+    <div ng-show="!currentUser"  class="carousel slide" ng-controller="CarouselDemoCtrl">
+      <uib-carousel interval="myInterval" no-wrap="noWrapSlides">
+        <uib-slide ng-repeat="slide in slides" active="slide.active" class="item">
+          <img ng-src="{[{slide.image}]}" style="margin:auto;">
+          <div class="container">
+            <div class="carousel-caption">
+              <h1>Slide {[{slide.title}]}</h1>
+              <p>{[{slide.subtitle}]}</p>
+              <div class="socialbuttons" ng-show="slide.socialbuttons">
+                <form ng-show="!currentUser" id="fbloginForm" name="fbloginForm" ng-controller="fbloginController" ng-submit="fblogin(fbat)" novalidate>
+                 <fb:login-button scope="public_profile,email,user_friends" size="xlarge" onlogin="checkLoginState();"> </fb:login-button>
+                 <input id="fbat" name="fbat" type="text" ng-model="fbat" style="display:none;"/>
+                 <br>
+                 <loading></loading>
+                 <br>
+               </form>
+               <input type="submit" value="Submit" form="fbloginForm" id="fbloginFormSubmit" name="fbloginFormSubmit" style="display:none;">
+               <form ng-show="!currentUser" id="googloginForm" name="googloginForm" ng-controller="googloginController" ng-submit="googlogin(googat)" novalidate>
+                 <div id="{[{slide.gbutton}]}"></div>
+                 <input id="googat" name="googat" type="text" ng-model="googat" style="display:none;"/>
+                 <br>
+                 <loading></loading>
+                 <br>
+               </form>
+               <input type="submit" value="Submit" form="googloginForm" id="googloginFormSubmit" name="googloginFormSubmit" style="display:none;">
+               <br><br><br>
+              </div>
+              <div class="slide-content" ng-show="!slide.socialbuttons">
+                <br><br><br><br><br><br>
+              </div>
+            </div>
+          </div>
+        </uib-slide>
+      </uib-carousel>
+    </div>
+    <nav ng-if="currentUser" class="navbar navbar-default navbar-static-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/#/home"><img height="20px" src="/static/djangorestangularjsboilerplate/assets/img/logo.jpg"/></a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="home">Home</a></li>
+            <li><a href="profile">Profile</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+    <div class="container">
+      <div class="row" ng-if="currentUser">
+        <div class="col-md-9">
+          <form class="form-inline">
+            <label for="exampleInputName2">Welcome: </label>
+            <input type="text" class="form-control" ng-model="currentUser.userId" placeholder="username" required="true" disabled="true"/>
+            <br>
+          </form>
+        </div>
+        <div class="col-md-3">
+          <form name="logoutForm" ng-controller="logoutController" ng-submit="logout()" novalidate>
+            <button type="submit" class="form-control">Logout</button>
+          </form>
+        </div>
+        <br>
+      </div>
+      <br>
+      <div ng-view></div>
+      <div class="row">
+        <div class="col-lg-6 col-md-6 col-xs-12">
+          <form ng-if="!currentUser" name="loginForm" ng-controller="loginController" ng-submit="login(credentials)" novalidate>
+            {% csrf_token %}
+            <h1>Email Login:</h1>
+            <br>
+            <input type="text" class="form-control" ng-model="credentials.username" placeholder="email" required="true"/>
+            <br>
+            <input type="password" class="form-control" ng-model="credentials.password" placeholder="password" required="true"/>
+            <br>
+            <button type="submit" class="form-control" ng-disabled="buttonDisabled">Login </button>
+            <br>
+           <loading></loading>
+            <div ng-if="loginFailed" class="alert alert-danger" role="alert">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only">Error:</span>
+              Invalid username password combination OR inactive account (in which case please check your email to activate your account)
+            </div>
+          <div>
+            <a class="pull-right" ng-click="forgotPassword()" href="javascript:;">Forgot password?</a>
+          </div>
+          </form>
+       </div>
+        <div class="col-lg-6 col-md-6 col-xs-12">
+          <form ng-if="!currentUser" name="signupForm" ng-controller="signupController" ng-submit="signup(credentials)" novalidate>
+            {% csrf_token %}
+            <h1>Email Sign Up:</h1>
+            <br>
+            <input type="text" class="form-control" ng-model="credentials.username" placeholder="email" required="true"/>
+            <br>
+            <input type="password" class="form-control" ng-model="credentials.password" placeholder="password" required="true"/>
+            <br>
+            <button type="submit" class="form-control" ng-disabled="buttonDisabled">Sign Up</button>
+            <br>
+            <loading></loading>
+            <br>
+            <div ng-if="signupFailed" class="alert alert-danger" role="alert">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only">Error:</span>
+              Username already taken. Try another.
+            </div>
+            <div ng-if="signupSuccess" class="alert alert-success" role="alert">
+              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              <span class="sr-only">Success:</span>
+              Successfully created user. Check your email and activate your account.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!--load custom views-->
+    <script>
+        CONFIG = {
+            URLS: {
+                forgotPassword: '{% url 'forgot-password' %}'
+            }
+        };
+    </script>
+    <script src="{% static 'djangorestangularjsboilerplate/app/components/home/home.js' %}"></script>
+    <script src="{% static 'djangorestangularjsboilerplate/app/components/profile/profile.js' %}"></script>
+  </body>
+</html>
